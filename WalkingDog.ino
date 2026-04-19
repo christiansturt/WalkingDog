@@ -8,11 +8,7 @@
 //Yellow - Data
 
 #define ROTATION_START_POS 1500
-//#define FRONT_UP_POS 1000
-//#define FRONT_DOWN_POS 1800
-//#define BACK_UP_POS 2000
-//#define BACK_DOWN_POS 1200
-#define SLIDER_FORWARD 1000
+u#define SLIDER_FORWARD 1000
 #define SLIDER_BACK 2000
 #define SLIDER_MIDDLE (SLIDER_FORWARD + SLIDER_BACK) / 2
 #define ROTATION_CENTRE_POS 1500
@@ -20,15 +16,12 @@
 
 #define FL_UP_POS 2000
 #define FL_DW_POS 1200
-
-#define BR_UP_POS 2000
-#define BR_DW_POS 1200
-
-#define FR_UP_POS 1400
-#define FR_DW_POS 1200
-
-#define BL_UP_POS 1300
-#define BL_DW_POS 1100
+#define BR_UP_POS 1200
+#define BR_DW_POS 2000
+#define FR_UP_POS 1200
+#define FR_DW_POS 2000
+#define BL_UP_POS 2000
+#define BL_DW_POS 1200
 
 
 

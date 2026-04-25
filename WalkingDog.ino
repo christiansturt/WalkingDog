@@ -8,7 +8,7 @@
 //Yellow - Data
 
 #define ROTATION_START_POS 1500
-u#define SLIDER_FORWARD 1000
+#define SLIDER_FORWARD 1000
 #define SLIDER_BACK 2000
 #define SLIDER_MIDDLE (SLIDER_FORWARD + SLIDER_BACK) / 2
 #define ROTATION_CENTRE_POS 1500
@@ -24,7 +24,7 @@ u#define SLIDER_FORWARD 1000
 #define BL_DW_POS 1200
 
 
-
+#define STEP_DELAY_MS 200
 
 //No 2 1200 is up, 2000 is down  Front Left
 //No 3  1100 is up, 14 00 is down Front Right
@@ -93,7 +93,7 @@ void setup()
   servoPos[BACK_LEFT_LEG] = BL_DW_POS;
   servoPos[SLIDER] = (SLIDER_FORWARD + SLIDER_BACK) / 2;
   servoPos[ROTATION] = ROTATION_START_POS;
-  servoOffset[ROTATION] = 100;       // rotation
+  servoOffset[ROTATION] = 50;       // rotation
 
 
   //set the servos to the initial positions
@@ -103,7 +103,8 @@ void setup()
     servos[i].writeMicroseconds(i); 
   }
 
-  Serial.println("Use l, r, f, b, u, d to control the dog. l = left, r = right, f = forward, b = backward, u = all legs up, d = all legs down");
+  Serial.println("v3 Use l, r, f, b, u, d to control the dog. l = left, r = right, f = forward, b = backward,");
+  Serial.println("u = all legs up, d = all legs down");
 
   for(int i=0; i<MAX_SERVOS_IN_DOG; i++) 
   {
@@ -354,9 +355,9 @@ bool turnLeft(int walkCount)
     raiseFLBR,
     rotate,
     lowerFLBR,
-    raiseFLBR,
+    raiseFRBL,
     endRotate,
-    lowerFLBR
+    lowerFRBL
   };
   stages[walkCount]();
   return false;
@@ -369,9 +370,9 @@ bool turnRight(int walkCount)
 {      // turn right sequence
   movementStages stages[MAX_MOVEMENTS] = 
   {
-    raiseFLBR,
+    raiseFRBL,
     rotate,
-    lowerFLBR,
+    lowerFRBL,
     raiseFLBR,
     endRotate,
     lowerFLBR
@@ -392,7 +393,7 @@ void walk(direction walkAction)
   bool walking = true;
   int walkCount = 0;
   unsigned long previousMillis = millis();
-  unsigned long stepTime = 500;   // time between each step in milliseconds
+  unsigned long stepTime = STEP_DELAY_MS;   // time between each step in milliseconds
   int filterVal = 5;
   while(walking) 
   {

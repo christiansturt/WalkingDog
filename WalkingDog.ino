@@ -24,7 +24,7 @@
 #define BL_DW_POS 1200
 
 
-#define STEP_DELAY_MS 200
+#define STEP_DELAY_MS 100
 
 //No 2 1200 is up, 2000 is down  Front Left
 //No 3  1100 is up, 14 00 is down Front Right
@@ -70,7 +70,7 @@ Servo servos[MAX_SERVOS_IN_DOG];
 int servoPos[MAX_SERVOS_IN_DOG];
 int servoPosFiltered[MAX_SERVOS_IN_DOG];
 int servoOffset[MAX_SERVOS_IN_DOG];
-
+bool debugStr=false;
 
 void setup() 
 {
@@ -87,10 +87,10 @@ void setup()
 
 
 
-  servoPos[FRONT_LEFT_LEG] = FL_DW_POS;
-  servoPos[BACK_RIGHT_LEG] = BR_DW_POS;
-  servoPos[FRONT_RIGHT_LEG] = FR_DW_POS;
-  servoPos[BACK_LEFT_LEG] = BL_DW_POS;
+  servoPos[FRONT_LEFT_LEG] = FL_UP_POS;
+  servoPos[BACK_RIGHT_LEG] = BR_UP_POS;
+  servoPos[FRONT_RIGHT_LEG] = FR_UP_POS;
+  servoPos[BACK_LEFT_LEG] = BL_UP_POS;
   servoPos[SLIDER] = (SLIDER_FORWARD + SLIDER_BACK) / 2;
   servoPos[ROTATION] = ROTATION_START_POS;
   servoOffset[ROTATION] = 50;       // rotation
@@ -103,13 +103,16 @@ void setup()
     servos[i].writeMicroseconds(i); 
   }
 
-  Serial.println("v3 Use l, r, f, b, u, d to control the dog. l = left, r = right, f = forward, b = backward,");
+  Serial.println("v6 Use l, r, f, b, u, d to control the dog. l = left, r = right, f = forward, b = backward,");
   Serial.println("u = all legs up, d = all legs down");
 
-  for(int i=0; i<MAX_SERVOS_IN_DOG; i++) 
+  
+  for(int i=0;debugStr && (i<MAX_SERVOS_IN_DOG); i++) 
   {
     Serial.println("Servo " + String(servoNames[i]) + " Start pos: " + String(servoPosFiltered[i] + servoOffset[i]));
   }
+
+  walk(DOWN); 
 }
 
 void loop() 
@@ -128,34 +131,55 @@ void loop()
     {
       case 'f': 
         walkAction = FORWARDS;
-        Serial.println("FORWARDS");
+        if(debugStr)
+        {
+          Serial.println("FORWARDS");
+        }
         break;
       case 'b': 
         walkAction = BACKWARDS;
-        Serial.println("BACKWARDS");
+        if(debugStr) 
+        {
+          Serial.println("BACKWARDS");
+        }
         break;
       case 'l': 
         walkAction = LEFT;
-        Serial.println("LEFT");
+        if(debugStr)
+        {
+          Serial.println("LEFT");
+        }
         break;
       case 'r': 
         walkAction = RIGHT;
-        Serial.println("RIGHT");
+        if(debugStr)
+        {
+          Serial.println("RIGHT");
+        }
         break;
       
       case 'u': 
         walkAction = UP;
-        Serial.println("UP");
+        if(debugStr)
+        {
+          Serial.println("UP");
+        }
         break;
       
       case 'd': 
         walkAction = DOWN;
-        Serial.println("DOWN");
+        if(debugStr)
+        {
+          Serial.println("DOWN");
+        }
         break;
         
       default:
         walkAction = ACTION_IDLE;
-        Serial.println("ACTION_IDLE");
+        if(debugStr)
+        {
+          Serial.println("ACTION_IDLE");
+        }
         break;
 
     }//switch(inChar) 
@@ -175,7 +199,10 @@ void loop()
 void endRotate()
 {
     servoPos[ROTATION] = ROTATION_CENTRE_POS;     // rotate back again
-    Serial.println("END ROTATE");
+    if(debugStr)
+    {
+      Serial.println("END ROTATE");
+    }
 }
 /**
  * Rotate the dog by moving the rotation servo and sliding the slider to the middle position
@@ -184,7 +211,10 @@ void rotate()
 {
     servoPos[SLIDER] = SLIDER_MIDDLE;      // move slider to the middle
     servoPos[ROTATION] = ROTATION_TURN_POS;      // rotate
-    Serial.println("ROTATE");
+    if(debugStr)
+    {
+      Serial.println("ROTATE");
+    }
 }
 /**
  * Move the slider forward to slide the dog forward
@@ -192,15 +222,21 @@ void rotate()
 void slideForward()
 {
   servoPos[SLIDER] = SLIDER_FORWARD;
-  Serial.println("SLIDE FORWARD");
-} 
+  if(debugStr)
+  {
+    Serial.println("SLIDE FORWARD");
+  }
+}
 /**
  * Move the slider back to slide the dog backward
  */
 void slideBack()
 {
   servoPos[SLIDER] = SLIDER_BACK;
-  Serial.println("SLIDE BACK");
+  if(debugStr)
+  {
+    Serial.println("SLIDE BACK");
+  }
 }
 /**
  * Raise the front right and back left legs to step forward or turn
@@ -209,7 +245,10 @@ void raiseFRBL()
 {
   servoPos[FRONT_RIGHT_LEG] = FR_UP_POS;
   servoPos[BACK_LEFT_LEG] = BL_UP_POS;
-  Serial.println("RAISE FRBL");
+  if(debugStr)
+  {
+    Serial.println("RAISE FRBL");
+  }
 }
 /**
  * Lower the front right and back left legs
@@ -218,7 +257,10 @@ void lowerFRBL()
 {
   servoPos[FRONT_RIGHT_LEG] = FR_DW_POS;
   servoPos[BACK_LEFT_LEG] = BL_DW_POS;
-  Serial.println("LOWER FRBL");
+  if(debugStr)
+  {
+    Serial.println("LOWER FRBL");
+  }
 }
 /**
  * Raise the front left and back right legs to step forward or turn
@@ -227,7 +269,10 @@ void raiseFLBR()
 {
   servoPos[FRONT_LEFT_LEG] = FL_UP_POS;
   servoPos[BACK_RIGHT_LEG] = BR_UP_POS;
-  Serial.println("RAISE FLBR");
+  if(debugStr)
+  {
+    Serial.println("RAISE FLBR");
+  }
 }
 /**
  * Lower the front left and back right legs
@@ -236,7 +281,10 @@ void lowerFLBR()
 {
   servoPos[FRONT_LEFT_LEG] = FL_DW_POS;
   servoPos[BACK_RIGHT_LEG] = BR_DW_POS;
-  Serial.println("LOWER FLBR");
+  if(debugStr)
+  {
+    Serial.println("LOWER FLBR");
+  }
 }
 
 void raiseAll()
@@ -245,7 +293,10 @@ void raiseAll()
   servoPos[BACK_RIGHT_LEG] = BR_UP_POS;
   servoPos[FRONT_RIGHT_LEG] = FR_UP_POS;
   servoPos[BACK_LEFT_LEG] = BL_UP_POS;
-  Serial.println("RAISE All");
+  if(debugStr)
+  {
+    Serial.println("RAISE All");
+  }
 }
 
 void lowerAll()
@@ -254,12 +305,18 @@ void lowerAll()
   servoPos[BACK_RIGHT_LEG] = BR_DW_POS;
   servoPos[FRONT_RIGHT_LEG] = FR_DW_POS;
   servoPos[BACK_LEFT_LEG] = BL_DW_POS;
-  Serial.println("LOWER All");
+  if(debugStr)
+  {
+    Serial.println("LOWER All");
+  }
 }
 
 void idle()
 {
-  Serial.println("IDLE");
+  if(debugStr)
+  {
+    Serial.println("IDLE");
+  }
 }
 
 
@@ -411,7 +468,10 @@ void walk(direction walkAction)
         allLegsDown
       };
       // call the appropriate walk action based on the walkAction parameter to calculate the next positions for the servos
-      Serial.println("WalkCount: " + String(walkCount) + " of " + String(MAX_MOVEMENTS) + " walkAction: " + String(walkAction) + " of " + String(ACTION_IDLE));
+      if(debugStr)
+      {
+        Serial.println("WalkCount: " + String(walkCount) + " of " + String(MAX_MOVEMENTS) + " walkAction: " + String(walkAction) + " of " + String(ACTION_IDLE));
+      }
       bool done = walkActionList[walkAction](walkCount);
       if(done) 
       {
@@ -420,12 +480,18 @@ void walk(direction walkAction)
       //now filter the motions and write to the servos
       for(int step=0;step<filterVal;step++) 
       {
-        Serial.println("Step: " + String(step) + " of " + String(filterVal));
+        if(debugStr)
+        {
+          Serial.println("Step: " + String(step) + " of " + String(filterVal));
+        }
         delay(stepTime/filterVal);  // delay between each filter step to make the motion smoother
        
         for(int i=0; i<MAX_SERVOS_IN_DOG; i++) 
         {
-          Serial.println("Servo " + String(servoNames[i]) + " pos before filter: " + String(servoPosFiltered[i]) + " Target pos: " + String(servoPos[i]) + " Raw pos: " + String(servoPosFiltered[i]));
+          if(debugStr)
+          {
+            Serial.println("Servo " + String(servoNames[i]) + " pos before filter: " + String(servoPosFiltered[i]) + " Target pos: " + String(servoPos[i]) + " Raw pos: " + String(servoPosFiltered[i]));
+          }
           servoPosFiltered[i] = filter( servoPosFiltered[i],servoPos[i], filterVal);
         }
 
@@ -433,7 +499,10 @@ void walk(direction walkAction)
         {
           //
           servos[i].writeMicroseconds(servoPosFiltered[i] + servoOffset[i]);   // lower value picks up leg
-          Serial.println("Servo " + String(servoNames[i]) + " pos: " + String(servoPosFiltered[i]) + " Target pos: " + String(servoPos[i]) + " Raw pos: " + String(servoPosFiltered[i]));
+          if(debugStr)
+          {
+            Serial.println("Servo " + String(servoNames[i]) + " pos: " + String(servoPosFiltered[i]) + " Target pos: " + String(servoPos[i]) + " Raw pos: " + String(servoPosFiltered[i]));
+          }
         }
   
 

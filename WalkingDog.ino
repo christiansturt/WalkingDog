@@ -1,6 +1,7 @@
 // Based on James Bruton's Mini Dogs
 
 #include <Servo.h>
+#include <SoftwareSerial.h>
 
 //Serveo Colours:
 //Brown Grount
@@ -65,7 +66,7 @@ typedef enum
 } direction;
 
 Servo servos[MAX_SERVOS_IN_DOG];
-
+SoftwareSerial BTserial(8, 9); // RX | TX
 
 int servoPos[MAX_SERVOS_IN_DOG];
 int servoPosFiltered[MAX_SERVOS_IN_DOG];
@@ -103,7 +104,7 @@ void setup()
     servos[i].writeMicroseconds(i); 
   }
 
-  Serial.println("v6 Use l, r, f, b, u, d to control the dog. l = left, r = right, f = forward, b = backward,");
+  Serial.println("v7 Use l, r, f, b, u, d to control the dog. l = left, r = right, f = forward, b = backward,");
   Serial.println("u = all legs up, d = all legs down");
 
   
@@ -113,11 +114,82 @@ void setup()
   }
 
   walk(DOWN); 
+
+  // HC-06 default serial speed is 9600
+  BTserial.begin(9600);  
 }
 
 void loop() 
 {
   // if there's any serial available, read it:
+  // Keep reading from HC-06 and send to Arduino Serial Monitor
+  if (BTserial.available())
+  {  
+    char inChar = BTserial.read();
+    direction walkAction = FORWARDS;  // default to forwards if no valid input
+
+    // look for the newline. That's the end of your sentence:
+    switch(inChar) 
+    {
+      case 'f': 
+        walkAction = FORWARDS;
+        if(debugStr)
+        {
+          Serial.println("FORWARDS");
+        }
+        break;
+      case 'b': 
+        walkAction = BACKWARDS;
+        if(debugStr) 
+        {
+          Serial.println("BACKWARDS");
+        }
+        break;
+      case 'l': 
+        walkAction = LEFT;
+        if(debugStr)
+        {
+          Serial.println("LEFT");
+        }
+        break;
+      case 'r': 
+        walkAction = RIGHT;
+        if(debugStr)
+        {
+          Serial.println("RIGHT");
+        }
+        break;
+      
+      case 'u': 
+        walkAction = UP;
+        if(debugStr)
+        {
+          Serial.println("UP");
+        }
+        break;
+      
+      case 'd': 
+        walkAction = DOWN;
+        if(debugStr)
+        {
+          Serial.println("DOWN");
+        }
+        break;
+        
+      default:
+        walkAction = ACTION_IDLE;
+        if(debugStr)
+        {
+          Serial.println("ACTION_IDLE");
+        }
+        break;
+
+    }//switch(inChar) 
+    if(walkAction != ACTION_IDLE) 
+    {
+      walk(walkAction);
+    }
+  }
   
   while (Serial.available() > 0) 
   {

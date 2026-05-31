@@ -75,6 +75,7 @@ int servoOffset[MAX_SERVOS_IN_DOG];
 bool debugStr=false;
 int rotatationEepromAddr = 0;  // EEPROM address to store the rotation servo offset for fine tuning the rest position of the rotation servo
 
+
 void setup() 
 {
 
@@ -96,7 +97,7 @@ void setup()
   servoPos[BACK_LEFT_LEG] = BL_UP_POS;
   servoPos[SLIDER] = (SLIDER_FORWARD + SLIDER_BACK) / 2;
   servoPos[ROTATION] = ROTATION_START_POS;
-  servoOffset[ROTATION] =  EEPROM.read(rotatationEepromAddr);  // read the rotation servo offset from EEPROM to fine tune the rest position of the rotation servo
+  servoOffset[ROTATION] =  EEPROM.get(rotatationEepromAddr,servoOffset[ROTATION]);  // read the rotation servo offset from EEPROM to fine tune the rest position of the rotation servo
 
 
   //set the servos to the initial positions
@@ -123,81 +124,18 @@ void setup()
 
   // HC-06 default serial speed is 9600
   BTserial.begin(9600);  
+  Serial.println("Walking Dog - Setup finished");
 }
 
 void loop() 
 {
   // if there's any serial available, read it:
   // Keep reading from HC-06 and send to Arduino Serial Monitor
+
   if (BTserial.available())
   {  
     char inChar = BTserial.read();
-    direction walkAction = FORWARDS;  // default to forwards if no valid input
-
-    // look for the newline. That's the end of your sentence:
-    switch(inChar) 
-    {
-      case 'f': 
-        walkAction = FORWARDS;
-        if(debugStr)
-        {
-          Serial.println("FORWARDS");
-        }
-        break;
-      case 'b': 
-        walkAction = BACKWARDS;
-        if(debugStr) 
-        {
-          Serial.println("BACKWARDS");
-        }
-        break;
-      case 'l': 
-        walkAction = LEFT;
-        if(debugStr)
-        {
-          Serial.println("LEFT");
-        }
-        break;
-      case 'r': 
-        walkAction = RIGHT;
-        if(debugStr)
-        {
-          Serial.println("RIGHT");
-        }
-        break;
-      
-      case 'u': 
-        walkAction = UP;
-        if(debugStr)
-        {
-          Serial.println("UP");
-        }
-        break;
-      
-      case 'd': 
-        walkAction = DOWN;
-        if(debugStr)
-        {
-          Serial.println("DOWN");
-        }
-        break;
-      case 'd': 
-        walkAction = ACTION_IDLE;
-        if(debugStr)
-        {
-          Serial.println("ACTION_IDLE");
-        }
-        break;
-        
-      default:
-        walkAction = ACTION_IDLE;
-        if(debugStr)
-        {
-          Serial.println("ACTION_IDLE");
-        }
-        break;
-
-    }//switch(inChar) 
+    direction walkAction = getAction(inChar);
     if(walkAction != ACTION_IDLE) 
     {
       walk(walkAction);
@@ -209,7 +147,18 @@ void loop()
     // look for the next valid integer in the incoming serial stream:
     //int location = Serial.parseInt();
     char inChar = Serial.read(); //
-    direction walkAction = FORWARDS;  // default to forwards if no valid input
+    direction walkAction = getAction(inChar);
+    if(walkAction != ACTION_IDLE) 
+    {
+      walk(walkAction);
+    }
+  }//while (Serial.available() > 0) 
+}
+
+
+direction getAction(char inChar)
+{
+   direction walkAction = FORWARDS;  // default to forwards if no valid input
 
     // look for the newline. That's the end of your sentence:
     switch(inChar) 
@@ -258,6 +207,22 @@ void loop()
           Serial.println("DOWN");
         }
         break;
+
+      case 'o': 
+        walkAction = ACTION_IDLE;
+        if(debugStr)
+        {
+          Serial.println("Override");
+        }
+        int overrideVal;
+        overrideVal = readInteger();
+        Serial.println("Override set to " + String(overrideVal));
+        EEPROM.put(rotatationEepromAddr,overrideVal); 
+        overrideVal = EEPROM.get(rotatationEepromAddr,overrideVal);
+        Serial.println("Override readBack " + String(overrideVal));
+
+        break;
+        
         
       default:
         walkAction = ACTION_IDLE;
@@ -268,16 +233,9 @@ void loop()
         break;
 
     }//switch(inChar) 
-    if(walkAction != ACTION_IDLE) 
-    {
-      walk(walkAction);
-    }
-  }//while (Serial.available() > 0) 
+
+    return walkAction;
 }
-
-
-
-
 /**
  * Set the rotation servo back to the centre position after a turn
  */
@@ -608,4 +566,46 @@ int filter(float prevValue, float targetValue, int filter)
 {  
   float lengthFiltered =  (prevValue + (targetValue * filter)) / (filter + 1);  
   return (int) lengthFiltered;  
+}
+int readInteger()
+{
+    String input = "";
+
+    while (true)
+    {
+        while (Serial.available() > 0)
+        {
+            char c = Serial.read();
+
+            // Ignore carriage return
+            if (c == '\r')
+                continue;
+
+            // Process line when Enter is pressed
+            if (c == '\n')
+            {
+                input.trim();
+
+                if (input.length() > 0)
+                {
+                    char *endPtr;
+                    long value = strtol(input.c_str(), &endPtr, 10);
+
+                    if (*endPtr == '\0' &&
+                        value >= -100 &&
+                        value <= 100)
+                    {
+                        return (int)value;
+                    }
+                }
+
+                Serial.println("Invalid input. Enter an integer between -100 and 100:");
+                input = "";
+            }
+            else
+            {
+                input += c;
+            }
+        }
+    }
 }

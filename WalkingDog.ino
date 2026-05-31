@@ -2,6 +2,7 @@
 
 #include <Servo.h>
 #include <SoftwareSerial.h>
+#include <EEPROM.h>
 
 //Serveo Colours:
 //Brown Grount
@@ -66,12 +67,13 @@ typedef enum
 } direction;
 
 Servo servos[MAX_SERVOS_IN_DOG];
-SoftwareSerial BTserial(8, 9); // RX | TX
+SoftwareSerial BTserial(8, 9); // RX | TX of the bluetooth module connected to pins 8 and 9 of the Arduino
 
 int servoPos[MAX_SERVOS_IN_DOG];
 int servoPosFiltered[MAX_SERVOS_IN_DOG];
 int servoOffset[MAX_SERVOS_IN_DOG];
 bool debugStr=false;
+int rotatationEepromAddr = 0;  // EEPROM address to store the rotation servo offset for fine tuning the rest position of the rotation servo
 
 void setup() 
 {
@@ -94,7 +96,7 @@ void setup()
   servoPos[BACK_LEFT_LEG] = BL_UP_POS;
   servoPos[SLIDER] = (SLIDER_FORWARD + SLIDER_BACK) / 2;
   servoPos[ROTATION] = ROTATION_START_POS;
-  servoOffset[ROTATION] = 50;       // rotation
+  servoOffset[ROTATION] =  EEPROM.read(rotatationEepromAddr);  // read the rotation servo offset from EEPROM to fine tune the rest position of the rotation servo
 
 
   //set the servos to the initial positions
@@ -104,8 +106,12 @@ void setup()
     servos[i].writeMicroseconds(i); 
   }
 
-  Serial.println("v7 Use l, r, f, b, u, d to control the dog. l = left, r = right, f = forward, b = backward,");
+  Serial.println("Walking Dog - Version 8 rotation offset stored in EEPROM: " + String(servoOffset[ROTATION]));
+  Serial.println("Use l, r, f, b, u, d, o to control the dog. l = left, r = right, f = forward, b = backward,");
+  Serial.println("l = left, r = right, f = forward, b = backward,");
   Serial.println("u = all legs up, d = all legs down");
+  Serial.println("o = override rotation servo offset for fine tuning the rest position of the rotation servo, send a value between -100 and 100, where positive values rotate the dog clockwise and negative values rotate the dog counterclockwise");
+  Serial.println("Send a value between -100 and 100, where positive values rotate the dog clockwise and negative values rotate the dog counterclockwise");
 
   
   for(int i=0;debugStr && (i<MAX_SERVOS_IN_DOG); i++) 
@@ -173,6 +179,13 @@ void loop()
         if(debugStr)
         {
           Serial.println("DOWN");
+        }
+        break;
+      case 'd': 
+        walkAction = ACTION_IDLE;
+        if(debugStr)
+        {
+          Serial.println("ACTION_IDLE");
         }
         break;
         
